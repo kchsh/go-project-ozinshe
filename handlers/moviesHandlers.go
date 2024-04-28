@@ -38,7 +38,14 @@ func (h *MoviesHandler) HandleFindById(c *gin.Context) {
 }
 
 func (h *MoviesHandler) HandleFindAll(c *gin.Context) {
-	movies, err := h.moviesRepo.FindAll(c)
+	filters := models.MovieFilters{
+		SearchTerm: c.Query("search"),
+		IsWatched:  c.Query("iswatched"),
+		GenreIds:   c.QueryArray("genreids"),
+		Sort:       c.Query("sort"),
+	}
+
+	movies, err := h.moviesRepo.FindAll(c, filters)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
 		return

@@ -2,8 +2,11 @@ package repositories
 
 import (
 	"context"
+	"fmt"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"ozinshe-final-project/models"
+	"strconv"
 )
 
 type MoviesRepository struct {
@@ -14,69 +17,139 @@ func NewMoviesRepository(db *pgxpool.Pool) *MoviesRepository {
 	return &MoviesRepository{db: db}
 }
 
-func (r *MoviesRepository) FindAll(c context.Context) ([]models.Movie, error) {
-	rows, err := r.db.Query(c, "select id, title, description, date_of_release, director, rating, trailer_url, poster_url from movies")
+func (r *MoviesRepository) FindAll(c context.Context, filters models.MovieFilters) ([]models.Movie, error) {
+	sql :=
+		`
+select m.id, 
+       m.title, 
+       m.description, 
+       m.date_of_release, 
+       m.director, 
+       m.rating, 
+       m.trailer_url, 
+       m.poster_url,
+       g.id,
+       g.title
+from movies m 
+join movie_genres mg on mg.movie_id = m.id
+join genres g on g.id = mg.genre_id
+where 1 = 1`
+
+	params := pgx.NamedArgs{}
+
+	if filters.SearchTerm != "" {
+		sql = fmt.Sprintf("%s and m.title ilike @s", sql)
+		params["s"] = fmt.Sprintf("%%%s%%", filters.SearchTerm)
+	}
+	if filters.IsWatched != "" {
+		isWatched, _ := strconv.ParseBool(filters.IsWatched)
+
+		sql = fmt.Sprintf("%s and m.is_watched = @isWatched", sql)
+		params["isWatched"] = isWatched
+	}
+	if len(filters.GenreIds) > 0 {
+		sql = fmt.Sprintf("%s and g.id = any(@genreIds)")
+		params["genreIds"] = filters.GenreIds
+	}
+
+	if filters.Sort != "" {
+		o := "asc"
+
+		// If reverse order
+		if string(filters.Sort[0]) == "-" {
+			o = "desc"
+			filters.Sort = filters.Sort[1:]
+		}
+
+		identifier := pgx.Identifier{filters.Sort}
+		q := fmt.Sprintf("order by %s %s", identifier.Sanitize(), o)
+		sql = fmt.Sprintf("%s %s", sql, q)
+	}
+
+	rows, err := r.db.Query(c, sql, params)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	movies := make([]models.Movie, 0)
+	movies := make(map[int]models.Movie)
 	for rows.Next() {
 		var movie models.Movie
-		if err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.DateOfRelease, &movie.Director, &movie.Rating, &movie.TrailerUrl, &movie.PosterUrl); err != nil {
-			return nil, err
-		}
-
-		genres, err := r.getGenresForMovie(c, movie.Id)
+		var genre models.Genre
+		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.DateOfRelease, &movie.Director,
+			&movie.Rating, &movie.TrailerUrl, &movie.PosterUrl, &genre.Id, &genre.Title)
 		if err != nil {
 			return nil, err
 		}
-		movie.Genres = genres
-		movies = append(movies, movie)
+
+		_, exists := movies[movie.Id]
+		if exists {
+			movie = movies[movie.Id]
+		}
+
+		movie.Genres = append(movie.Genres, genre)
+		movies[movie.Id] = movie
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return movies, nil
+	slice := make([]models.Movie, 0, len(movies))
+	for _, m := range movies {
+		slice = append(slice, m)
+	}
+
+	return slice, nil
 }
 
 func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, error) {
-	var movie models.Movie
-	err := r.db.QueryRow(
-		c,
+	sql :=
 		`
-select id, 
-       title, 
-       description, 
-       date_of_release, 
-       director, 
-       rating, 
-       trailer_url, 
-       poster_url 
-from movies 
-where id = $1
-`,
-		id).Scan(
-		&movie.Id,
-		&movie.Title,
-		&movie.Description,
-		&movie.DateOfRelease,
-		&movie.Director,
-		&movie.Rating,
-		&movie.TrailerUrl,
-		&movie.PosterUrl)
+select m.id, 
+       m.title, 
+       m.description, 
+       m.date_of_release, 
+       m.director, 
+       m.rating, 
+       m.trailer_url, 
+       m.poster_url,
+       g.id,
+       g.title
+from movies m 
+join movie_genres mg on mg.movie_id = m.id
+join genres g on g.id = mg.genre_id
+where m.id = $1
+`
+
+	rows, err := r.db.Query(c, sql, id)
 	if err != nil {
+		return models.Movie{}, err
+	}
+	defer rows.Close()
+
+	movies := make(map[int]models.Movie)
+	for rows.Next() {
+		var movie models.Movie
+		var genre models.Genre
+		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.DateOfRelease, &movie.Director,
+			&movie.Rating, &movie.TrailerUrl, &movie.PosterUrl, &genre.Id, &genre.Title)
+		if err != nil {
+			return models.Movie{}, err
+		}
+
+		_, exists := movies[movie.Id]
+		if exists {
+			movie = movies[movie.Id]
+		}
+
+		movie.Genres = append(movie.Genres, genre)
+		movies[movie.Id] = movie
+	}
+	if err := rows.Err(); err != nil {
 		return models.Movie{}, err
 	}
 
-	genres, err := r.getGenresForMovie(c, movie.Id)
-	if err != nil {
-		return models.Movie{}, err
-	}
-	movie.Genres = genres
-	return movie, nil
+	return movies[id], nil
 }
 
 func (r *MoviesRepository) Create(c context.Context, movie models.Movie) (int, error) {
@@ -175,34 +248,4 @@ func (r *MoviesRepository) SetWatched(c context.Context, movieId int, isWatched 
 	}
 
 	return nil
-}
-
-func (r *MoviesRepository) getGenresForMovie(c context.Context, movieID int) ([]models.Genre, error) {
-	rows, err := r.db.Query(
-		c,
-		`
-select g.id, g.title 
-from genres g
-join movie_genres mg on mg.genre_id = g.id
-join movies m on m.id = $1
-`,
-		movieID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var genres []models.Genre
-	for rows.Next() {
-		var genre models.Genre
-		if err := rows.Scan(&genre.Id, &genre.Title); err != nil {
-			return nil, err
-		}
-		genres = append(genres, genre)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return genres, nil
 }
