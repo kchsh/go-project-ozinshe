@@ -81,6 +81,12 @@ func (h *GenreHandlers) HandleUpdate(c *gin.Context) {
 		return
 	}
 
+	_, err = h.repo.FindById(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	genre := models.Genre{Title: request.Title}
 	err = h.repo.Update(c, id, genre)
 	if err != nil {
@@ -95,6 +101,12 @@ func (h *GenreHandlers) HandleDelete(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, NewApiError("Invalid genre id"))
+		return
+	}
+
+	_, err = h.repo.FindById(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

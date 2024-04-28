@@ -1,13 +1,14 @@
 create table movies
 (
-    id           serial primary key,
-    title        text not null,
-    description  text default null,
-    release_date date default null,
-    director     text default null,
-    rating       float,
-    trailer_url  text default null,
-    poster_url   text default null
+    id              serial primary key,
+    title           text not null,
+    description     text default null,
+    date_of_release date default null,
+    director        text default null,
+    rating          int  default 0,
+    is_watched      bool default false,
+    trailer_url     text default null,
+    poster_url      text default null
 );
 
 create table genres

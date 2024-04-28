@@ -2,15 +2,15 @@ package repositories
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"ozinshe-final-project/models"
 )
 
 type GenresRepository struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func NewGenresRepository(db *pgx.Conn) *GenresRepository {
+func NewGenresRepository(db *pgxpool.Pool) *GenresRepository {
 	return &GenresRepository{db: db}
 }
 
@@ -36,14 +36,14 @@ func (r *GenresRepository) FindAll(c context.Context) ([]models.Genre, error) {
 	return genres, nil
 }
 
-func (r *GenresRepository) FindById(c context.Context, id int) (*models.Genre, error) {
+func (r *GenresRepository) FindById(c context.Context, id int) (models.Genre, error) {
 	var genre models.Genre
 	err := r.db.QueryRow(c, "select id, title from genres where id = $1", id).Scan(&genre.Id, &genre.Title)
 	if err != nil {
-		return nil, err
+		return models.Genre{}, err
 	}
 
-	return &genre, nil
+	return genre, nil
 }
 
 func (r *GenresRepository) Create(c context.Context, genre models.Genre) (int, error) {
