@@ -18,10 +18,19 @@ func main() {
 	}
 	defer conn.Close(context.Background())
 
+	genresRepository := repositories.NewGenresRepository(conn)
+	genreHandlers := handlers.NewGenreHandlers(genresRepository)
+
 	moviesRepository := repositories.NewMoviesRepository(conn)
 	moviesHandler := handlers.NewMoviesHandler(moviesRepository)
 
 	r.GET("/movies/:id", moviesHandler.HandleFindById)
+
+	r.GET("/genres", genreHandlers.HandleFindAll)
+	r.GET("/genres/:id", genreHandlers.HandleFindById)
+	r.POST("/genres", genreHandlers.HandleCreate)
+	r.PUT("/genres/:id", genreHandlers.HandleUpdate)
+	r.DELETE("/genres/:id", genreHandlers.HandleDelete)
 
 	r.Run(":8080")
 }
