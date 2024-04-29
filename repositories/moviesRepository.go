@@ -27,7 +27,7 @@ select m.id,
        m.director, 
        m.rating, 
        m.trailer_url, 
-       m.poster_url,
+       m.poster_id,
        g.id,
        g.title
 from movies m 
@@ -112,7 +112,7 @@ select m.id,
        m.director, 
        m.rating, 
        m.trailer_url, 
-       m.poster_url,
+       m.poster_id,
        g.id,
        g.title
 from movies m 
@@ -161,7 +161,7 @@ func (r *MoviesRepository) Create(c context.Context, movie models.Movie) (int, e
 	err := r.db.QueryRow(
 		c,
 		`
-insert into movies(title, description, date_of_release, director, trailer_url, poster_url) 
+insert into movies(title, description, date_of_release, director, trailer_url, poster_id) 
 values($1, $2, $3, $4, $5, $6) 
 returning id`,
 		movie.Title,
@@ -195,7 +195,7 @@ set title = $1,
     date_of_release = $3, 
     director = $4, 
     trailer_url = $5, 
-    poster_url = $6 
+    poster_id = $6 
 where id = $7
 `,
 		movie.Title,

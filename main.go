@@ -28,6 +28,7 @@ func main() {
 	usersRepository := repositories.NewUsersRepository(conn)
 	userHandlers := handlers.NewUserHandlers(usersRepository)
 	authHandlers := handlers.NewAuthHandlers(usersRepository)
+	imageHandlers := handlers.NewImageHandlers()
 
 	authorized := r.Group("/")
 	authorized.Use(middlewares.AuthMiddleware)
@@ -62,6 +63,7 @@ func main() {
 
 	unauthorized := r.Group("")
 	unauthorized.POST("auth/signIn", authHandlers.HandleSignIn)
+	unauthorized.GET("images", imageHandlers.HandleGetImageById)
 
 	r.Run(":8080")
 }

@@ -72,8 +72,8 @@ func (h *MoviesHandler) getGenresByIds(c *gin.Context, ids []int) ([]models.Genr
 	return selected, nil
 }
 
-func (h *MoviesHandler) getSavePathForImage(filename string) string {
-	const imagesPath = "static/img/"
+func (h *MoviesHandler) getImageId(filename string) string {
+	const imagesPath = "images/"
 	return fmt.Sprintf("%s%s%s", imagesPath, uuid.New(), filepath.Ext(filename))
 }
 
@@ -109,7 +109,7 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 	}
 
 	poster, _ := c.FormFile("poster")
-	posterPath := h.getSavePathForImage(poster.Filename)
+	posterPath := h.getImageId(poster.Filename)
 	err = c.SaveUploadedFile(poster, posterPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
@@ -172,7 +172,7 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 	}
 
 	poster, _ := c.FormFile("poster")
-	posterPath := h.getSavePathForImage(poster.Filename)
+	posterPath := h.getImageId(poster.Filename)
 	err = c.SaveUploadedFile(poster, posterPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))

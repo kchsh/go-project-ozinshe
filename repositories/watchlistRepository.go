@@ -24,7 +24,7 @@ select m.id,
        m.director, 
        m.rating, 
        m.trailer_url, 
-       m.poster_url,
+       m.poster_id,
        g.id,
        g.title
 from watchlist wl

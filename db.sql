@@ -8,7 +8,7 @@ create table movies
     rating          int  default 0,
     is_watched      bool default false,
     trailer_url     text default null,
-    poster_url      text default null
+    poster_id       text default null
 );
 
 create table genres
