@@ -24,6 +24,8 @@ func main() {
 	moviesHandler := handlers.NewMoviesHandler(moviesRepository, genresRepository)
 	watchlistRepository := repositories.NewWatchlistRepository(conn)
 	watchlistHandlers := handlers.NewWatchlistHandler(moviesRepository, watchlistRepository)
+	usersRepository := repositories.NewUsersRepository(conn)
+	userHandlers := handlers.NewUserHandlers(usersRepository)
 
 	r.GET("genres", genreHandlers.HandleFindAll)
 	r.GET("genres/:id", genreHandlers.HandleFindById)
@@ -36,13 +38,19 @@ func main() {
 	r.POST("movies", moviesHandler.HandleCreate)
 	r.PUT("movies/:id", moviesHandler.HandleUpdate)
 	r.DELETE("movies/:id", moviesHandler.HandleDelete)
-
 	r.PATCH("movies/:id/rate", moviesHandler.HandleSetRating)
 	r.PATCH("movies/:id/setWatched", moviesHandler.HandleSetWatched)
 
 	r.GET("watchlist", watchlistHandlers.HandleGetMovies)
 	r.POST("watchlist/add", watchlistHandlers.HandleAddMovie)
 	r.DELETE("watchlist/remove", watchlistHandlers.HandleRemoveMovie)
+
+	r.GET("users", userHandlers.HandleFindAll)
+	r.GET("users/:id", userHandlers.HandleFindById)
+	r.POST("users", userHandlers.HandleCreate)
+	r.PUT("users/:id", userHandlers.HandleUpdate)
+	r.PUT("users/:id/changePassword", userHandlers.HandleChangePassword)
+	r.DELETE("users/:id", userHandlers.HandleDelete)
 
 	r.Run(":8080")
 }

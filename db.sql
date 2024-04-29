@@ -29,3 +29,11 @@ create table watchlist
     movie_id int primary key references movies (id),
     added_at timestamp
 );
+
+create table users
+(
+    id            serial primary key,
+    name          text not null,
+    email         text not null unique,
+    password_hash text not null
+);
