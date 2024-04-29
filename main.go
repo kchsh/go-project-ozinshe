@@ -22,21 +22,27 @@ func main() {
 	genreHandlers := handlers.NewGenreHandlers(genresRepository)
 	moviesRepository := repositories.NewMoviesRepository(conn)
 	moviesHandler := handlers.NewMoviesHandler(moviesRepository, genresRepository)
+	watchlistRepository := repositories.NewWatchlistRepository(conn)
+	watchlistHandlers := handlers.NewWatchlistHandler(moviesRepository, watchlistRepository)
 
-	r.GET("/genres", genreHandlers.HandleFindAll)
-	r.GET("/genres/:id", genreHandlers.HandleFindById)
-	r.POST("/genres", genreHandlers.HandleCreate)
-	r.PUT("/genres/:id", genreHandlers.HandleUpdate)
-	r.DELETE("/genres/:id", genreHandlers.HandleDelete)
+	r.GET("genres", genreHandlers.HandleFindAll)
+	r.GET("genres/:id", genreHandlers.HandleFindById)
+	r.POST("genres", genreHandlers.HandleCreate)
+	r.PUT("genres/:id", genreHandlers.HandleUpdate)
+	r.DELETE("genres/:id", genreHandlers.HandleDelete)
 
-	r.GET("/movies", moviesHandler.HandleFindAll)
-	r.GET("/movies/:id", moviesHandler.HandleFindById)
-	r.POST("/movies", moviesHandler.HandleCreate)
-	r.PUT("/movies/:id", moviesHandler.HandleUpdate)
-	r.DELETE("/movies/:id", moviesHandler.HandleDelete)
+	r.GET("movies", moviesHandler.HandleFindAll)
+	r.GET("movies/:id", moviesHandler.HandleFindById)
+	r.POST("movies", moviesHandler.HandleCreate)
+	r.PUT("movies/:id", moviesHandler.HandleUpdate)
+	r.DELETE("movies/:id", moviesHandler.HandleDelete)
 
 	r.PATCH("movies/:id/rate", moviesHandler.HandleSetRating)
 	r.PATCH("movies/:id/setWatched", moviesHandler.HandleSetWatched)
+
+	r.GET("watchlist", watchlistHandlers.HandleGetMovies)
+	r.POST("watchlist/add", watchlistHandlers.HandleAddMovie)
+	r.DELETE("watchlist/remove", watchlistHandlers.HandleRemoveMovie)
 
 	r.Run(":8080")
 }

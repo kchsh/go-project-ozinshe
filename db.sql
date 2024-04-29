@@ -23,3 +23,9 @@ create table movie_genres
     genre_id int references genres (id),
     primary key (movie_id, genre_id)
 );
+
+create table watchlist
+(
+    movie_id int primary key references movies (id),
+    added_at timestamp
+);

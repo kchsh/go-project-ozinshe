@@ -149,6 +149,10 @@ where m.id = $1
 		return models.Movie{}, err
 	}
 
+	if len(movies) == 0 {
+		return models.Movie{}, pgx.ErrNoRows
+	}
+
 	return movies[id], nil
 }
 
