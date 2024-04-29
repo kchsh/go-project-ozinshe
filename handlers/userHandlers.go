@@ -34,6 +34,12 @@ type changePasswordRequest struct {
 	ConfirmPassword string `json:"confirmPassword"`
 }
 
+type UserResponse struct {
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 func (h *UserHandlers) HandleFindAll(c *gin.Context) {
 	users, err := h.repo.FindAll(c)
 	if err != nil {
@@ -41,7 +47,9 @@ func (h *UserHandlers) HandleFindAll(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, users)
+	r := MapUsersToResponse(users)
+
+	c.JSON(http.StatusOK, r)
 }
 
 func (h *UserHandlers) HandleFindById(c *gin.Context) {
@@ -58,7 +66,9 @@ func (h *UserHandlers) HandleFindById(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	r := MapUserToResponse(user)
+
+	c.JSON(http.StatusOK, r)
 }
 
 func (h *UserHandlers) HandleCreate(c *gin.Context) {
@@ -189,4 +199,28 @@ func (h *UserHandlers) HandleChangePassword(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
+}
+
+func MapUsersToResponse(users []models.User) []UserResponse {
+	usersResponse := make([]UserResponse, 0, len(users))
+
+	for _, user := range users {
+		r := UserResponse{
+			Id:    user.Id,
+			Name:  user.Name,
+			Email: user.Email,
+		}
+
+		usersResponse = append(usersResponse, r)
+	}
+
+	return usersResponse
+}
+
+func MapUserToResponse(user models.User) UserResponse {
+	return UserResponse{
+		Id:    user.Id,
+		Name:  user.Name,
+		Email: user.Email,
+	}
 }

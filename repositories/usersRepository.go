@@ -43,6 +43,15 @@ func (u *UsersRepository) FindAll(c context.Context) ([]models.User, error) {
 	return users, nil
 }
 
+func (u *UsersRepository) FindByEmail(c context.Context, email string) (models.User, error) {
+	row := u.db.QueryRow(c, "select id, name, email, password_hash from users where email = $1", email)
+
+	var user models.User
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.PasswordHash)
+
+	return user, err
+}
+
 func (u *UsersRepository) Create(c context.Context, user models.User) (int, error) {
 	var id int
 	err := u.db.QueryRow(c, "insert into users(name, email, password_hash) values ($1, $2, $3) returning id", user.Name, user.Email, user.PasswordHash).Scan(&id)
