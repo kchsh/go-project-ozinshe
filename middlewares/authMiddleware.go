@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"ozinshe-final-project/config"
 	"ozinshe-final-project/handlers"
 	"strconv"
 	"strings"
@@ -19,7 +20,7 @@ func AuthMiddleware(c *gin.Context) {
 
 	tokenString := strings.Split(authHeader, "Bearer ")[1]
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return handlers.JWTSecretKey, nil
+		return []byte(config.Config.JwtSecretKey), nil
 	})
 	if err != nil || !token.Valid {
 		c.JSON(http.StatusUnauthorized, handlers.NewApiError("Invalid token"))

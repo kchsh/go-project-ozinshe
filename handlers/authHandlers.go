@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"ozinshe-final-project/config"
 	"ozinshe-final-project/repositories"
 	"strconv"
 	"time"
@@ -17,9 +18,6 @@ type AuthHandlers struct {
 func NewAuthHandlers(usersRepo *repositories.UsersRepository) *AuthHandlers {
 	return &AuthHandlers{usersRepo: usersRepo}
 }
-
-var JWTSecretKey = []byte("supersecretkey")
-var JWTExpirationSeconds = 3600
 
 type signInRequest struct {
 	Email    string `json:"email"`
@@ -46,10 +44,10 @@ func (h *AuthHandlers) HandleSignIn(c *gin.Context) {
 
 	claims := jwt.RegisteredClaims{
 		Subject:   strconv.Itoa(user.Id),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(JWTExpirationSeconds) * time.Second)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.Config.JwtExpiresIn)),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(JWTSecretKey)
+	tokenString, err := token.SignedString([]byte(config.Config.JwtSecretKey))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return

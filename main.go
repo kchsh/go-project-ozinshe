@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/spf13/viper"
 	"log"
+	"ozinshe-final-project/config"
 	"ozinshe-final-project/handlers"
 	"ozinshe-final-project/middlewares"
 	"ozinshe-final-project/repositories"
@@ -12,6 +15,11 @@ import (
 
 func main() {
 	r := gin.Default()
+
+	err := loadConfigs()
+	if err != nil {
+		log.Fatalf("Error reading config file. %s", err)
+	}
 
 	conn, err := connectToDb()
 	if err != nil {
@@ -65,15 +73,33 @@ func main() {
 	unauthorized.POST("auth/signIn", authHandlers.HandleSignIn)
 	unauthorized.GET("images", imageHandlers.HandleGetImageById)
 
-	r.Run(":8080")
+	r.Run(fmt.Sprintf(":%s", config.Config.AppPort))
 }
 
 func connectToDb() (*pgxpool.Pool, error) {
-	dbUrl := "postgres://postgres:postgrespw@localhost:55000"
-	conn, err := pgxpool.New(context.Background(), dbUrl)
+	conn, err := pgxpool.New(context.Background(), config.Config.DbConnectionString)
 	if err != nil {
 		return nil, err
 	}
 
 	return conn, nil
+}
+
+func loadConfigs() error {
+	viper.SetConfigFile(".env")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		return err
+	}
+
+	var mapConfig config.MapConfig
+	err = viper.Unmarshal(&mapConfig)
+	if err != nil {
+		return err
+	}
+
+	config.Config = &mapConfig
+
+	return nil
 }
