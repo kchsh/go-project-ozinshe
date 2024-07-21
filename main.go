@@ -6,13 +6,38 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"ozinshe-final-project/config"
+	"ozinshe-final-project/docs"
 	"ozinshe-final-project/handlers"
 	"ozinshe-final-project/middlewares"
 	"ozinshe-final-project/repositories"
 )
 
+// @title           Ozinshe API
+// @version         1.0
+// @description     This is a sample server celler server.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
 	r := gin.Default()
 
@@ -72,6 +97,9 @@ func main() {
 	unauthorized := r.Group("")
 	unauthorized.POST("auth/signIn", authHandlers.HandleSignIn)
 	unauthorized.GET("images", imageHandlers.HandleGetImageById)
+
+	docs.SwaggerInfo.BasePath = "/"
+	unauthorized.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	r.Run(fmt.Sprintf(":%s", config.Config.AppPort))
 }

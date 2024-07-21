@@ -5,7 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"ozinshe-final-project/config"
-	"ozinshe-final-project/handlers"
+	"ozinshe-final-project/models"
 	"strconv"
 	"strings"
 )
@@ -13,7 +13,7 @@ import (
 func AuthMiddleware(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
-		c.JSON(http.StatusUnauthorized, handlers.NewApiError("Authorization header required"))
+		c.JSON(http.StatusUnauthorized, models.NewApiError("Authorization header required"))
 		c.Abort()
 		return
 	}
@@ -23,14 +23,14 @@ func AuthMiddleware(c *gin.Context) {
 		return []byte(config.Config.JwtSecretKey), nil
 	})
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, handlers.NewApiError("Invalid token"))
+		c.JSON(http.StatusUnauthorized, models.NewApiError("Invalid token"))
 		c.Abort()
 		return
 	}
 
 	subject, err := token.Claims.GetSubject()
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, handlers.NewApiError("Error while getting subject"))
+		c.JSON(http.StatusUnauthorized, models.NewApiError("Error while getting subject"))
 		c.Abort()
 		return
 	}

@@ -21,22 +21,44 @@ func NewMoviesHandler(moviesRepo *repositories.MoviesRepository, genresRepo *rep
 	return &MoviesHandler{moviesRepo: moviesRepo, genresRepo: genresRepo}
 }
 
+// HandleFindById godoc
+// @Summary      Find by id
+// @Tags movies
+// @Accept       json
+// @Produce      json
+// @Param id path int true "Movie id"
+// @Success      200  {object} models.Movie "OK"
+// @Failure   	 400  {object} models.ApiError "Invalid movie id"
+// @Failure   	 404  {object} models.ApiError "Movie not found"
+// @Failure   	 500  {object} models.ApiError
+// @Router       /movies/{id} [get]
+// @Security Bearer
 func (h *MoviesHandler) HandleFindById(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewApiError("Invalid Movie Id"))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid Movie Id"))
 		return
 	}
 
 	movie, err := h.moviesRepo.FindById(c, id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, NewApiError(err.Error()))
+		c.JSON(http.StatusNotFound, models.NewApiError(err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, movie)
 }
 
+// HandleFindAll godoc
+// @Summary      Get all movies
+// @Tags movies
+// @Accept       json
+// @Produce      json
+// @Param filters body models.MovieFilters true "Movie filters"
+// @Success      200  {object} models.Movie "OK"
+// @Failure   	 500  {object} models.ApiError
+// @Router       /movies [get]
+// @Security Bearer
 func (h *MoviesHandler) HandleFindAll(c *gin.Context) {
 	filters := models.MovieFilters{
 		SearchTerm: c.Query("search"),
@@ -47,7 +69,7 @@ func (h *MoviesHandler) HandleFindAll(c *gin.Context) {
 
 	movies, err := h.moviesRepo.FindAll(c, filters)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 
@@ -77,10 +99,27 @@ func (h *MoviesHandler) getImageId(filename string) string {
 	return fmt.Sprintf("%s%s%s", imagesPath, uuid.New(), filepath.Ext(filename))
 }
 
+// HandleCreate godoc
+// @Summary      Create movie
+// @Tags movies
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param title formData string true "Title"
+// @Param description formData string true "Description"
+// @Param dateOfRelease formData string true "Date of release"
+// @Param director formData string true "Director"
+// @Param trailerUrl formData string true "Trailer URL"
+// @Param genreIds formData []int true "Genre ids"
+// @Param poster formData file true "Poster image"
+// @Success      200  {object} object{id=int} "OK"
+// @Failure   	 400  {object} models.ApiError "Invalid data"
+// @Failure   	 500  {object} models.ApiError
+// @Router       /movies [post]
+// @Security Bearer
 func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 	_, err := c.MultipartForm()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewApiError("Invalid request payload"))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid request payload"))
 		return
 	}
 
@@ -95,7 +134,7 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 	for i, idStr := range genresArray {
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, NewApiError("Invalid genre id"))
+			c.JSON(http.StatusBadRequest, models.NewApiError("Invalid genre id"))
 			return
 		}
 
@@ -104,7 +143,7 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 
 	genres, err := h.getGenresByIds(c, genreIds)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 
@@ -112,7 +151,7 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 	posterPath := h.getImageId(poster.Filename)
 	err = c.SaveUploadedFile(poster, posterPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 	}
 
 	movie := models.Movie{
@@ -127,17 +166,35 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 
 	id, err := h.moviesRepo.Create(c, movie)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"id": id})
 }
 
+// HandleUpdate godoc
+// @Summary      Update movie
+// @Tags movies
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param id path int true "Movie id"
+// @Param title formData string true "Title"
+// @Param description formData string true "Description"
+// @Param dateOfRelease formData string true "Date of release"
+// @Param director formData string true "Director"
+// @Param trailerUrl formData string true "Trailer URL"
+// @Param genreIds formData []int true "Genre ids"
+// @Param poster formData file true "Poster image"
+// @Success      200  {object} object{id=int} "OK"
+// @Failure   	 400  {object} models.ApiError "Invalid data"
+// @Failure   	 500  {object} models.ApiError
+// @Router       /movies/{id} [put]
+// @Security Bearer
 func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewApiError(err.Error()))
+		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
 		return
 	}
 
@@ -158,7 +215,7 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 	for i, idStr := range genresArray {
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, NewApiError("Invalid genre id"))
+			c.JSON(http.StatusBadRequest, models.NewApiError("Invalid genre id"))
 			return
 		}
 
@@ -167,7 +224,7 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 
 	genres, err := h.getGenresByIds(c, genreIds)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 
@@ -175,7 +232,7 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 	posterPath := h.getImageId(poster.Filename)
 	err = c.SaveUploadedFile(poster, posterPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 	}
 
 	movie := models.Movie{
@@ -191,17 +248,28 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 
 	err = h.moviesRepo.Update(c, id, movie)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 	c.Status(http.StatusOK)
 }
 
+// HandleDelete godoc
+// @Summary      Delete movie
+// @Tags movies
+// @Accept       json
+// @Produce      json
+// @Param id path int true "Movie id"
+// @Success      200  "OK"
+// @Failure   	 400  {object} models.ApiError "Invalid data"
+// @Failure   	 500  {object} models.ApiError
+// @Router       /movies/{id} [delete]
+// @Security Bearer
 func (h *MoviesHandler) HandleDelete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewApiError(err.Error()))
+		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
 		return
 	}
 
@@ -213,66 +281,90 @@ func (h *MoviesHandler) HandleDelete(c *gin.Context) {
 
 	err = h.moviesRepo.Delete(c, id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 	c.Status(http.StatusOK)
 }
 
+// HandleSetRating godoc
+// @Summary      Set movie rating
+// @Tags movies
+// @Accept       json
+// @Produce      json
+// @Param id path int true "Movie id"
+// @Param rating query int true "Movie rating"
+// @Success      200  "OK"
+// @Failure   	 400  {object} models.ApiError "Invalid data"
+// @Failure   	 500  {object} models.ApiError
+// @Router       /movies/{id}/rate [patch]
+// @Security Bearer
 func (h *MoviesHandler) HandleSetRating(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewApiError("Invalid movie Id"))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie Id"))
 		return
 	}
 
 	ratingStr := c.Query("rating")
 	rating, err := strconv.Atoi(ratingStr)
 	if err != nil || rating > 5 || rating < 1 {
-		c.JSON(http.StatusBadRequest, NewApiError("Invalid rating value"))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid rating value"))
 		return
 	}
 
 	_, err = h.moviesRepo.FindById(c, id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 
 	err = h.moviesRepo.SetRating(c, id, rating)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 
 	c.Status(http.StatusOK)
 }
 
+// HandleSetWatched godoc
+// @Summary      Mark movie as watched
+// @Tags movies
+// @Accept       json
+// @Produce      json
+// @Param id path int true "Movie id"
+// @Param isWatched query bool true "Flag value"
+// @Success      200  "OK"
+// @Failure   	 400  {object} models.ApiError "Invalid data"
+// @Failure   	 500  {object} models.ApiError
+// @Router       /movies/{id}/setWatched [patch]
+// @Security Bearer
 func (h *MoviesHandler) HandleSetWatched(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewApiError("Invalid movie Id"))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie Id"))
 		return
 	}
 
 	isWatchedStr := c.Query("isWatched")
 	isWatched, err := strconv.ParseBool(isWatchedStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewApiError("Invalid isWatched value"))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid isWatched value"))
 		return
 	}
 
 	_, err = h.moviesRepo.FindById(c, id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 
 	err = h.moviesRepo.SetWatched(c, id, isWatched)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewApiError(err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 		return
 	}
 
