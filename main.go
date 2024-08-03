@@ -43,12 +43,12 @@ func main() {
 
 	err := loadConfigs()
 	if err != nil {
-		log.Fatalf("Error reading config file. %s", err)
+		log.Fatal("Error reading config file", err)
 	}
 
 	conn, err := connectToDb()
 	if err != nil {
-		log.Fatal("Unable to connect to db")
+		log.Fatal("Unable to connect to db", err)
 	}
 	defer conn.Close()
 
@@ -106,6 +106,10 @@ func main() {
 
 func connectToDb() (*pgxpool.Pool, error) {
 	conn, err := pgxpool.New(context.Background(), config.Config.DbConnectionString)
+	if err != nil {
+		return nil, err
+	}
+	err = conn.Ping(context.Background())
 	if err != nil {
 		return nil, err
 	}

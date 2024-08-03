@@ -37,3 +37,7 @@ create table users
     email         text not null unique,
     password_hash text not null
 );
+
+-- Seeding data
+insert into users (name, email, password_hash)
+values ('admin', 'admin@admin.com', '$2y$10$iCCKNv39bVatC7HelfyfGOLWi9cNYP2zmbb59vIraMMXSnzP5Nczq');
