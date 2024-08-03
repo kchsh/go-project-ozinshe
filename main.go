@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
@@ -28,7 +27,7 @@ import (
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host      localhost:8080
+// @host      ozinshe.kchsherbakov.com
 // @BasePath  /
 
 // @securityDefinitions.apikey Bearer
@@ -101,7 +100,7 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/"
 	unauthorized.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	r.Run(fmt.Sprintf(":%s", config.Config.AppPort))
+	r.Run(config.Config.AppHost)
 }
 
 func connectToDb() (*pgxpool.Pool, error) {
