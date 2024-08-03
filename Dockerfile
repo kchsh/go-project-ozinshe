@@ -9,7 +9,7 @@ RUN go mod download
 COPY .env .
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /ozinshe-go 
+RUN go build -o /ozinshe-go 
 
 EXPOSE 8080
 
