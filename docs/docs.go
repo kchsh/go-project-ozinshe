@@ -431,13 +431,28 @@ const docTemplate = `{
                 "summary": "Get all movies",
                 "parameters": [
                     {
-                        "description": "Movie filters",
-                        "name": "filters",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.MovieFilters"
-                        }
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "genreIds",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "isWatched",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "searchTerm",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1440,26 +1455,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "trailerUrl": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.MovieFilters": {
-            "type": "object",
-            "properties": {
-                "genreIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "isWatched": {
-                    "type": "string"
-                },
-                "searchTerm": {
-                    "type": "string"
-                },
-                "sort": {
                     "type": "string"
                 }
             }

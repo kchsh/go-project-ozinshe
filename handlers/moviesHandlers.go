@@ -54,7 +54,7 @@ func (h *MoviesHandler) HandleFindById(c *gin.Context) {
 // @Tags movies
 // @Accept       json
 // @Produce      json
-// @Param filters body models.MovieFilters true "Movie filters"
+// @Param filters query models.MovieFilters true "Movie filters"
 // @Success      200  {object} models.Movie "OK"
 // @Failure   	 500  {object} models.ApiError
 // @Router       /movies [get]

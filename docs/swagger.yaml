@@ -88,19 +88,6 @@ definitions:
       trailerUrl:
         type: string
     type: object
-  models.MovieFilters:
-    properties:
-      genreIds:
-        items:
-          type: string
-        type: array
-      isWatched:
-        type: string
-      searchTerm:
-        type: string
-      sort:
-        type: string
-    type: object
 externalDocs:
   description: OpenAPI
   url: https://swagger.io/resources/open-api/
@@ -366,12 +353,21 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Movie filters
-        in: body
-        name: filters
-        required: true
-        schema:
-          $ref: '#/definitions/models.MovieFilters'
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: genreIds
+        type: array
+      - in: query
+        name: isWatched
+        type: string
+      - in: query
+        name: searchTerm
+        type: string
+      - in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
