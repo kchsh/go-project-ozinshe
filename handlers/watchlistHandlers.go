@@ -41,20 +41,19 @@ func (h *WatchlistHandler) HandleGetMovies(c *gin.Context) {
 // @Tags watchlist
 // @Accept       json
 // @Produce      json
-// @Param movieId query int true "Movie id"
+// @Param movieId path int true "Movie id"
 // @Success      200 "OK"
 // @Failure   	 400  {object} models.ApiError "Invalid data"
 // @Failure   	 500  {object} models.ApiError
-// @Router       /watchlist/add [post]
+// @Router       /watchlist/:movieId [post]
 // @Security Bearer
 func (h *WatchlistHandler) HandleAddMovie(c *gin.Context) {
-	idStr := c.Query("movieId")
+	idStr := c.Param("movieId")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie id"))
 		return
 	}
-
 	_, err = h.moviesRepo.FindById(c, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
@@ -75,14 +74,14 @@ func (h *WatchlistHandler) HandleAddMovie(c *gin.Context) {
 // @Tags watchlist
 // @Accept       json
 // @Produce      json
-// @Param movieId query int true "Movie id"
+// @Param movieId path int true "Movie id"
 // @Success      200 "OK"
 // @Failure   	 400  {object} models.ApiError "Invalid data"
 // @Failure   	 500  {object} models.ApiError
-// @Router       /watchlist/remove [post]
+// @Router       /watchlist/:movieId [delete]
 // @Security Bearer
 func (h *WatchlistHandler) HandleRemoveMovie(c *gin.Context) {
-	idStr := c.Query("movieId")
+	idStr := c.Param("movieId")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie id"))

@@ -40,7 +40,8 @@ order by wl.added_at
 	}
 	defer rows.Close()
 
-	movies := make(map[int]models.Movie)
+	moviesMap := make(map[int]*models.Movie)
+	movies := make([]*models.Movie, 0)
 	for rows.Next() {
 		var movie models.Movie
 		var genre models.Genre
@@ -50,24 +51,23 @@ order by wl.added_at
 			return nil, err
 		}
 
-		_, exists := movies[movie.Id]
-		if exists {
-			movie = movies[movie.Id]
+		if _, exists := moviesMap[movie.Id]; !exists {
+			moviesMap[movie.Id] = &movie
+			movies = append(movies, &movie)
 		}
 
-		movie.Genres = append(movie.Genres, genre)
-		movies[movie.Id] = movie
+		moviesMap[movie.Id].Genres = append(moviesMap[movie.Id].Genres, genre)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	slice := make([]models.Movie, 0, len(movies))
+	concreteMovies := make([]models.Movie, 0, len(movies))
 	for _, m := range movies {
-		slice = append(slice, m)
+		concreteMovies = append(concreteMovies, *m)
 	}
 
-	return slice, nil
+	return concreteMovies, nil
 
 }
 

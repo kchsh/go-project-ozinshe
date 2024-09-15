@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	cors "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
@@ -39,6 +40,13 @@ import (
 // @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
 	r := gin.Default()
+
+	corsConfig := cors.Config{
+		AllowAllOrigins: true,
+		AllowHeaders:    []string{"*"},
+		AllowMethods:    []string{"*"},
+	}
+	r.Use(cors.New(corsConfig))
 
 	err := loadConfigs()
 	if err != nil {
@@ -80,8 +88,8 @@ func main() {
 	authorized.PATCH("movies/:id/setWatched", moviesHandler.HandleSetWatched)
 
 	authorized.GET("watchlist", watchlistHandlers.HandleGetMovies)
-	authorized.POST("watchlist/add", watchlistHandlers.HandleAddMovie)
-	authorized.DELETE("watchlist/remove", watchlistHandlers.HandleRemoveMovie)
+	authorized.POST("watchlist/:movieId", watchlistHandlers.HandleAddMovie)
+	authorized.DELETE("watchlist/:movieId", watchlistHandlers.HandleRemoveMovie)
 
 	authorized.GET("users", userHandlers.HandleFindAll)
 	authorized.GET("users/:id", userHandlers.HandleFindById)
@@ -95,7 +103,7 @@ func main() {
 
 	unauthorized := r.Group("")
 	unauthorized.POST("auth/signIn", authHandlers.HandleSignIn)
-	unauthorized.GET("images", imageHandlers.HandleGetImageById)
+	unauthorized.GET("images/:imageId", imageHandlers.HandleGetImageById)
 
 	docs.SwaggerInfo.BasePath = "/"
 	unauthorized.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

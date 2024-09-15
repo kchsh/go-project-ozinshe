@@ -26,6 +26,7 @@ select m.id,
        m.date_of_release, 
        m.director, 
        m.rating, 
+       m.is_watched,
        m.trailer_url, 
        m.poster_id,
        g.id,
@@ -48,7 +49,7 @@ where 1 = 1`
 		params["isWatched"] = isWatched
 	}
 	if len(filters.GenreIds) > 0 {
-		sql = fmt.Sprintf("%s and g.id = any(@genreIds)")
+		sql = fmt.Sprintf("%s and g.id = any(@genreIds)", sql)
 		params["genreIds"] = filters.GenreIds
 	}
 
@@ -62,7 +63,7 @@ where 1 = 1`
 		}
 
 		identifier := pgx.Identifier{filters.Sort}
-		q := fmt.Sprintf("order by %s %s", identifier.Sanitize(), o)
+		q := fmt.Sprintf("order by m.%s %s", identifier.Sanitize(), o)
 		sql = fmt.Sprintf("%s %s", sql, q)
 	}
 
@@ -72,34 +73,35 @@ where 1 = 1`
 	}
 	defer rows.Close()
 
-	movies := make(map[int]models.Movie)
+	movies := make([]*models.Movie, 0)
+	moviesMap := make(map[int]*models.Movie)
 	for rows.Next() {
 		var movie models.Movie
 		var genre models.Genre
 		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.DateOfRelease, &movie.Director,
-			&movie.Rating, &movie.TrailerUrl, &movie.PosterUrl, &genre.Id, &genre.Title)
+			&movie.Rating, &movie.IsWatched, &movie.TrailerUrl, &movie.PosterUrl, &genre.Id, &genre.Title)
 		if err != nil {
 			return nil, err
 		}
 
-		_, exists := movies[movie.Id]
-		if exists {
-			movie = movies[movie.Id]
+		if _, exists := moviesMap[movie.Id]; !exists {
+			moviesMap[movie.Id] = &movie
+			movies = append(movies, &movie)
 		}
 
-		movie.Genres = append(movie.Genres, genre)
-		movies[movie.Id] = movie
+		moviesMap[movie.Id].Genres = append(moviesMap[movie.Id].Genres, genre)
 	}
+
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	slice := make([]models.Movie, 0, len(movies))
+	concreteMovies := make([]models.Movie, 0, len(movies))
 	for _, m := range movies {
-		slice = append(slice, m)
+		concreteMovies = append(concreteMovies, *m)
 	}
 
-	return slice, nil
+	return concreteMovies, nil
 }
 
 func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, error) {

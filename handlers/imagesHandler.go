@@ -20,20 +20,20 @@ func NewImageHandlers() *ImageHandlers {
 // @Tags images
 // @Accept       json
 // @Produce      application/octet-stream
-// @Param imageId query int true "image id"
+// @Param imageId path int true "image id"
 // @Success      200  {string} string "Image to download"
 // @Failure 400 {object} models.ApiError "Invalid image id"
 // @Failure   	 500  {object} models.ApiError
-// @Router       /images [get]
+// @Router       /images/:imageId [get]
 func (h *ImageHandlers) HandleGetImageById(c *gin.Context) {
-	imageId := c.Query("imageId")
+	imageId := c.Param("imageId")
 	if imageId == "" {
 		c.JSON(http.StatusBadRequest, "Invalid image id")
 		return
 	}
 
 	fileName := filepath.Base(imageId)
-	byteFile, err := os.ReadFile(imageId)
+	byteFile, err := os.ReadFile(fmt.Sprintf("images/%s", imageId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
