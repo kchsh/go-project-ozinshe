@@ -1,10 +1,24 @@
 ﻿services:
-  app:
+  ui:
+    image: kchsherbakov/ozinshe-ui:latest
+    container_name: ozinshe-ui
+    environment:
+      VITE_API_URL: "http://localhost:8081"
+      VITE_FEATURE_AUTH: "true"
+    ports:
+      - "8080:3000"
+  
+  api:
     container_name: ozinshe-go
     build:
       dockerfile: Dockerfile
+    environment:
+      APP_HOST: ":8081"
+      DB_CONNECTION_STRING: "postgres://postgres:postgres@db/postgres"
+      JWT_SECRET_KEY: "supersecretkey"
+      JWT_EXPIRE_DURATION: "24h"
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       - db
   
@@ -19,6 +33,6 @@
       - "./init.sql:/docker-entrypoint-initdb.d/init.sql"
     ports:
       - "5432:5432"
-        
+
 volumes:
   db-data:
