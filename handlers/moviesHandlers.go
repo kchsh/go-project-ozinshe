@@ -94,9 +94,13 @@ func (h *MoviesHandler) getGenresByIds(c *gin.Context, ids []int) ([]models.Genr
 	return selected, nil
 }
 
-func (h *MoviesHandler) getImageId(filename string) string {
-	const imagesPath = "images/"
-	return fmt.Sprintf("%s%s%s", imagesPath, uuid.New(), filepath.Ext(filename))
+func (h *MoviesHandler) transformFilename(poster string) string {
+	return fmt.Sprintf("%s%s", uuid.New(), filepath.Ext(poster))
+
+}
+
+func (h *MoviesHandler) getFilePath(filename string) string {
+	return fmt.Sprintf("images/%s", filename)
 }
 
 // HandleCreate godoc
@@ -148,8 +152,9 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 	}
 
 	poster, _ := c.FormFile("poster")
-	posterPath := h.getImageId(poster.Filename)
-	err = c.SaveUploadedFile(poster, posterPath)
+	filename := h.transformFilename(poster.Filename)
+	filePath := h.getFilePath(filename)
+	err = c.SaveUploadedFile(poster, filePath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 	}
@@ -160,7 +165,7 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 		DateOfRelease: date,
 		Director:      director,
 		TrailerUrl:    trailerUrl,
-		PosterUrl:     posterPath,
+		PosterUrl:     filename,
 		Genres:        genres,
 	}
 
@@ -229,8 +234,9 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 	}
 
 	poster, _ := c.FormFile("poster")
-	posterPath := h.getImageId(poster.Filename)
-	err = c.SaveUploadedFile(poster, posterPath)
+	filename := h.transformFilename(poster.Filename)
+	filePath := h.getFilePath(filename)
+	err = c.SaveUploadedFile(poster, filePath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.NewApiError(err.Error()))
 	}
@@ -242,7 +248,7 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 		DateOfRelease: date,
 		Director:      director,
 		TrailerUrl:    trailerUrl,
-		PosterUrl:     posterPath,
+		PosterUrl:     filename,
 		Genres:        genres,
 	}
 
