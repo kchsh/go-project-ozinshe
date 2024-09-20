@@ -168,6 +168,3 @@ values (1, 1),
        (10, 12),
        (10, 7),
        (10, 1);
-       
-       
-   alter sequence genres_id_seq restart with 1;
