@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type MovieFilters struct {
 	SearchTerm string
 	GenreIds   []string
@@ -10,14 +8,14 @@ type MovieFilters struct {
 }
 
 type Movie struct {
-	Id            int
-	Title         string
-	Description   string
-	DateOfRelease time.Time
-	Director      string
-	Rating        int
-	TrailerUrl    string
-	PosterUrl     string
-	IsWatched     bool
-	Genres        []Genre
+	Id          int
+	Title       string
+	Description string
+	ReleaseYear int
+	Director    string
+	Rating      int
+	TrailerUrl  string
+	PosterUrl   string
+	IsWatched   bool
+	Genres      []Genre
 }

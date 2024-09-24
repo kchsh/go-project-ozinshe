@@ -23,7 +23,7 @@ func (r *MoviesRepository) FindAll(c context.Context, filters models.MovieFilter
 select m.id, 
        m.title, 
        m.description, 
-       m.date_of_release, 
+       m.release_year, 
        m.director, 
        m.rating, 
        m.is_watched,
@@ -78,7 +78,7 @@ where 1 = 1`
 	for rows.Next() {
 		var movie models.Movie
 		var genre models.Genre
-		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.DateOfRelease, &movie.Director,
+		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.ReleaseYear, &movie.Director,
 			&movie.Rating, &movie.IsWatched, &movie.TrailerUrl, &movie.PosterUrl, &genre.Id, &genre.Title)
 		if err != nil {
 			return nil, err
@@ -110,7 +110,7 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 select m.id, 
        m.title, 
        m.description, 
-       m.date_of_release, 
+       m.release_year, 
        m.director, 
        m.rating, 
        m.trailer_url, 
@@ -133,7 +133,7 @@ where m.id = $1
 	for rows.Next() {
 		var movie models.Movie
 		var genre models.Genre
-		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.DateOfRelease, &movie.Director,
+		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.ReleaseYear, &movie.Director,
 			&movie.Rating, &movie.TrailerUrl, &movie.PosterUrl, &genre.Id, &genre.Title)
 		if err != nil {
 			return models.Movie{}, err
@@ -163,12 +163,12 @@ func (r *MoviesRepository) Create(c context.Context, movie models.Movie) (int, e
 	err := r.db.QueryRow(
 		c,
 		`
-insert into movies(title, description, date_of_release, director, trailer_url, poster_id) 
+insert into movies(title, description, release_year, director, trailer_url, poster_id) 
 values($1, $2, $3, $4, $5, $6) 
 returning id`,
 		movie.Title,
 		movie.Description,
-		movie.DateOfRelease,
+		movie.ReleaseYear,
 		movie.Director,
 		movie.TrailerUrl,
 		movie.PosterUrl,
@@ -194,7 +194,7 @@ func (r *MoviesRepository) Update(c context.Context, id int, movie models.Movie)
 update movies 
 set title = $1, 
     description = $2, 
-    date_of_release = $3, 
+    release_year = $3, 
     director = $4, 
     trailer_url = $5, 
     poster_id = $6 
@@ -202,7 +202,7 @@ where id = $7
 `,
 		movie.Title,
 		movie.Description,
-		movie.DateOfRelease,
+		movie.ReleaseYear,
 		movie.Director,
 		movie.TrailerUrl,
 		movie.PosterUrl,

@@ -6,6 +6,7 @@
     environment:
       VITE_API_URL: "https://api.kchsherbakov/ozinshe:8081"
       VITE_FEATURE_AUTH: "true"
+      VITE_SIMPLIFIED_MOVIE: "false"
     ports:
       - "8080:3000"
   

@@ -9,7 +9,6 @@ import (
 	"ozinshe-final-project/repositories"
 	"path/filepath"
 	"strconv"
-	"time"
 )
 
 type MoviesHandler struct {
@@ -110,7 +109,7 @@ func (h *MoviesHandler) getFilePath(filename string) string {
 // @Produce      json
 // @Param title formData string true "Title"
 // @Param description formData string true "Description"
-// @Param dateOfRelease formData string true "Date of release"
+// @Param releaseYear formData int true "Year of release"
 // @Param director formData string true "Director"
 // @Param trailerUrl formData string true "Trailer URL"
 // @Param genreIds formData []int true "Genre ids"
@@ -129,7 +128,11 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 
 	title := c.PostForm("title")
 	description := c.PostForm("description")
-	date, _ := time.Parse("2006-01-02", c.PostForm("dateOfRelease"))
+	releaseYearStr := c.PostForm("releaseYear")
+	releaseYear, err := strconv.Atoi(releaseYearStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
+	}
 	director := c.PostForm("director")
 	trailerUrl := c.PostForm("trailerUrl")
 
@@ -160,13 +163,13 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 	}
 
 	movie := models.Movie{
-		Title:         title,
-		Description:   description,
-		DateOfRelease: date,
-		Director:      director,
-		TrailerUrl:    trailerUrl,
-		PosterUrl:     filename,
-		Genres:        genres,
+		Title:       title,
+		Description: description,
+		ReleaseYear: releaseYear,
+		Director:    director,
+		TrailerUrl:  trailerUrl,
+		PosterUrl:   filename,
+		Genres:      genres,
 	}
 
 	id, err := h.moviesRepo.Create(c, movie)
@@ -185,7 +188,7 @@ func (h *MoviesHandler) HandleCreate(c *gin.Context) {
 // @Param id path int true "Movie id"
 // @Param title formData string true "Title"
 // @Param description formData string true "Description"
-// @Param dateOfRelease formData string true "Date of release"
+// @Param releaseYear formData int true "Year of release"
 // @Param director formData string true "Director"
 // @Param trailerUrl formData string true "Trailer URL"
 // @Param genreIds formData []int true "Genre ids"
@@ -211,7 +214,8 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 
 	title := c.PostForm("title")
 	description := c.PostForm("description")
-	date, _ := time.Parse("2006-01-02", c.PostForm("dateOfRelease"))
+	releaseYearStr := c.PostForm("releaseYear")
+	releaseYear, err := strconv.Atoi(releaseYearStr)
 	director := c.PostForm("director")
 	trailerUrl := c.PostForm("trailerUrl")
 
@@ -242,14 +246,14 @@ func (h *MoviesHandler) HandleUpdate(c *gin.Context) {
 	}
 
 	movie := models.Movie{
-		Id:            id,
-		Title:         title,
-		Description:   description,
-		DateOfRelease: date,
-		Director:      director,
-		TrailerUrl:    trailerUrl,
-		PosterUrl:     filename,
-		Genres:        genres,
+		Id:          id,
+		Title:       title,
+		Description: description,
+		ReleaseYear: releaseYear,
+		Director:    director,
+		TrailerUrl:  trailerUrl,
+		PosterUrl:   filename,
+		Genres:      genres,
 	}
 
 	err = h.moviesRepo.Update(c, id, movie)

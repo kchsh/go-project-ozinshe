@@ -20,7 +20,7 @@ func (r *WatchlistRepository) GetMoviesFromWatchlist(c context.Context) ([]model
 select m.id, 
        m.title, 
        m.description, 
-       m.date_of_release, 
+       m.release_year, 
        m.director, 
        m.rating, 
        m.trailer_url, 
@@ -45,7 +45,7 @@ order by wl.added_at
 	for rows.Next() {
 		var movie models.Movie
 		var genre models.Genre
-		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.DateOfRelease, &movie.Director,
+		err := rows.Scan(&movie.Id, &movie.Title, &movie.Description, &movie.ReleaseYear, &movie.Director,
 			&movie.Rating, &movie.TrailerUrl, &movie.PosterUrl, &genre.Id, &genre.Title)
 		if err != nil {
 			return nil, err
